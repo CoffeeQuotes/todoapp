@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const taskInput = document.getElementById('task-input');
     const taskList = document.getElementById('task-list');
     const showAllBtn = document.getElementById('show-all-btn');
+    const profileDataContainer = document.getElementById('profile-data');
 
     const loadTasks = (completed = false) => {
         const url = completed ? '/api/tasks' : '/api/tasks?completed=false';
@@ -21,7 +22,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const appendTask = (task) => {
         const taskItem = document.createElement('li');
         taskItem.dataset.id = task.id;
-        taskItem.className = "flex items-center justify-between p-2 border-b";
+        taskItem.className = `flex items-center justify-between p-2 border-b ${
+            task.completed ? 'bg-green-200' : 'bg-yellow-200'
+        }`;
         taskItem.innerHTML = `
             <input type="checkbox" ${task.completed ? 'checked' : ''} class="task-checkbox">
             <span class="flex-grow ml-2">${task.title}</span>
@@ -57,9 +60,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             axios.put(`/api/tasks/${taskId}`, { completed: isChecked })
                 .then(response => {
-                    if (isChecked) {
-                        taskItem.remove();
-                    }
+                    taskItem.className = `flex items-center justify-between p-2 border-b ${
+                        isChecked ? 'bg-green-200' : 'bg-yellow-200'
+                    }`;
                 });
         }
     });
@@ -79,5 +82,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
     showAllBtn.addEventListener('click', () => loadTasks(true));
 
+    const loadGitHubProfile = () => {
+        axios.get('https://api.github.com/users/CoffeeQuotes')
+            .then(response => {
+                const profile = response.data;
+                profileDataContainer.innerHTML = `
+                    <p><strong>Username:</strong> ${profile.login}</p>
+                    <p><strong>Name:</strong> ${profile.name}</p>
+                    <p><strong>Bio:</strong> ${profile.bio}</p>
+                    <p><strong>Location:</strong> ${profile.location}</p>
+                    <p><strong>Public Repos:</strong> ${profile.public_repos}</p>
+                    <p><strong>Followers:</strong> ${profile.followers}</p>
+                    <p><strong>Following:</strong> ${profile.following}</p>
+                    <p><strong>GitHub Profile:</strong> <a href="${profile.html_url}" class="text-blue-500" target="_blank">${profile.html_url}</a></p>
+                `;
+            })
+            .catch(error => {
+                profileDataContainer.innerHTML = `<p class="text-red-500">Error fetching GitHub profile data</p>`;
+            });
+    };
+
     loadTasks();
+    loadGitHubProfile();
 });
